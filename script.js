@@ -1422,6 +1422,10 @@ function correctRadius (radius) {
     return radius;
 }
 
+var posX, posY;
+posX = canvas.width / 2;
+posY = canvas.height / 2;
+
 function getGamepadeState() {
 
     const gamepads = navigator.getGamepads()
@@ -1440,10 +1444,67 @@ function getGamepadeState() {
         .map((button, id) => ({ id, button }))
         .filter(isPressed)
 
-    if (pressedButtons.length > 0) {
-        console.log(pressedButtons)
+    let currentlyPressed = pressedButtons.map(button => { return button.id })
+    console.log(currentlyPressed)
+
+    if (currentlyPressed.includes(6)) {
+    // When L2 pressed
+
+        let pointer = pointers.find(p => p.id == -1);
+        if (pointer == null)
+            pointer = new pointerPrototype();
+        updatePointerDownData(pointer, -1, posX, posY);
+
+    } else if (currentlyPressed.includes(13)) {
+    // UP
+
+        let speed = 10
+        let pointer = pointers[0];
+        if (!pointer.down) return;
+        posX = posX
+        posY = posY + speed
+        updatePointerMoveData(pointer, posX, posY);
+
+    } else if (currentlyPressed.includes(12)) {
+    // DOWN
+
+        let speed = 10
+        let pointer = pointers[0];
+        if (!pointer.down) return;
+        posX = posX
+        posY = posY - speed
+        updatePointerMoveData(pointer, posX, posY);
+
+    } else if (currentlyPressed.includes(15)) {
+    // RIGHT
+        
+        let speed = 10
+        let pointer = pointers[0];
+        if (!pointer.down) return;
+        posX = posX + speed
+        posY = posY
+        updatePointerMoveData(pointer, posX, posY);
+
+    } else if (currentlyPressed.includes(14)) {
+    // LEFT
+
+        let speed = 10
+        let pointer = pointers[0];
+        if (!pointer.down) return;
+        posX = posX - speed
+        posY = posY
+        updatePointerMoveData(pointer, posX, posY);
+
+    } else if (currentlyPressed.includes(0)) {
+    // When X pressed
+
         splatStack.push(parseInt(Math.random() * 20) + 5);
-        pressedButtons = []
+
+    } else {
+    // When L2 released
+
+        updatePointerUpData(pointers[0]);
+
     }
 
 }
@@ -1551,10 +1612,8 @@ function correctDeltaY (delta) {
 }
 
 function generateTwoColors(pointer) {
-    let pink = { r: 0.15, g: 0, b: 0.15 }
-    let blue = { r: 0, g: 0.15, b: 0.15 }
-
-    console.log(pointer.currentColor)
+    let pink = { r: 0.15,   g: 0,       b: 0.15 }
+    let blue = { r: 0,      g: 0.15,    b: 0.15 }
 
     if (pointer.currentColor === 'pink') {
         pointer.currentColor = 'blue'
