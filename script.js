@@ -1468,7 +1468,6 @@ function getGamepadeState() {
         (posY > canvas.height) ? posY = 0 : posY = posY + speed * activeJoysticks[1];
         (posY < 0) ? posY = canvas.height : posY = posY + speed * activeJoysticks[1];
 
-        
         updatePointerMoveData(pointer, posX, posY);
 
         // Change config whilest moving
