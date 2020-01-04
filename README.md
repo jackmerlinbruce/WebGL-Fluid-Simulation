@@ -1,5 +1,6 @@
 # WebGL Fluid Simulation - THE GAME VERSION
 
+[Play here](https://jackmerlinbruce.github.io/WebGL-Fluid-Simulation/)
 [Play the original here](https://paveldogreat.github.io/WebGL-Fluid-Simulation/)
 
 <img src="/screenshot.jpg?raw=true" width="880">
