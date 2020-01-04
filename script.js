@@ -31,12 +31,12 @@ let config = {
     SIM_RESOLUTION: 128,
     DYE_RESOLUTION: 1024,
     CAPTURE_RESOLUTION: 512,
-    DENSITY_DISSIPATION: 3,
-    VELOCITY_DISSIPATION: 2,
+    DENSITY_DISSIPATION: 1,
+    VELOCITY_DISSIPATION: 3,
     PRESSURE: 0.8,
     PRESSURE_ITERATIONS: 20,
     CURL: 30,
-    SPLAT_RADIUS: 0.25,
+    SPLAT_RADIUS: 0.01,
     SPLAT_FORCE: 6000,
     SHADING: true,
     COLORFUL: false,
@@ -44,11 +44,11 @@ let config = {
     PAUSED: false,
     BACK_COLOR: { r: 0, g: 0, b: 0 },
     TRANSPARENT: false,
-    BLOOM: false,
+    BLOOM: true,
     BLOOM_ITERATIONS: 8,
     BLOOM_RESOLUTION: 256,
-    BLOOM_INTENSITY: 0.8,
-    BLOOM_THRESHOLD: 0.6,
+    BLOOM_INTENSITY: 0.4,
+    BLOOM_THRESHOLD: 0.9,
     BLOOM_SOFT_KNEE: 0.7,
     SUNRAYS: true,
     SUNRAYS_RESOLUTION: 196,
@@ -1440,12 +1440,14 @@ function getGamepadeState() {
         return !!pressed;
     }
 
+    let activeJoysticks = gamepad.axes
+
     let pressedButtons = gamepad.buttons
         .map((button, id) => ({ id, button }))
         .filter(isPressed)
 
     let currentlyPressed = pressedButtons.map(button => { return button.id })
-    console.log(currentlyPressed)
+    // console.log(currentlyPressed)
 
     if (currentlyPressed.includes(6)) {
     // When L2 pressed
@@ -1454,7 +1456,7 @@ function getGamepadeState() {
         if (pointer == null)
             pointer = new pointerPrototype();
         updatePointerDownData(pointer, -1, posX, posY);
-
+        
     } else if (currentlyPressed.includes(13)) {
     // UP
 
@@ -1499,6 +1501,29 @@ function getGamepadeState() {
     // When X pressed
 
         splatStack.push(parseInt(Math.random() * 20) + 5);
+
+    } else if (activeJoysticks) {
+
+        let speed = 50
+        let pointer = pointers[0];
+        if (!pointer.down) return;
+        posX = posX + speed * activeJoysticks[0]
+        posY = posY + speed * activeJoysticks[1]
+        updatePointerMoveData(pointer, posX, posY);
+
+        if (currentlyPressed.includes(7)) {
+            pressedButtons.map(button => {
+                if (button.id === 7) {
+                    let size = button.button.value
+                    config.SPLAT_RADIUS = 0.01 + (size * 0.1) ;
+                    config.BLOOM_INTENSITY = 0.4 - (size * 0.35)
+                }
+            })
+        } else {
+            config.SPLAT_RADIUS = 0.01
+            config.BLOOM_INTENSITY = 0.4
+        }
+
 
     } else {
     // When L2 released
@@ -1582,7 +1607,7 @@ function updatePointerDownData (pointer, id, posX, posY) {
     pointer.prevTexcoordY = pointer.texcoordY;
     pointer.deltaX = 0;
     pointer.deltaY = 0;
-    pointer.color = generateTwoColors(pointer);
+    pointer.color = generateRandomColor(pointer);
 }
 
 function updatePointerMoveData (pointer, posX, posY) {
