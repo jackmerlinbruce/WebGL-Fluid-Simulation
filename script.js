@@ -1449,68 +1449,29 @@ function getGamepadeState() {
     let currentlyPressed = pressedButtons.map(button => { return button.id })
     // console.log(currentlyPressed)
 
-    if (currentlyPressed.includes(6)) {
-    // When L2 pressed
-
+    if (currentlyPressed.includes(6)) { // When L2 pressed
         let pointer = pointers.find(p => p.id == -1);
         if (pointer == null)
             pointer = new pointerPrototype();
         updatePointerDownData(pointer, -1, posX, posY);
-        
-    } else if (currentlyPressed.includes(13)) {
-    // UP
-
-        let speed = 10
-        let pointer = pointers[0];
-        if (!pointer.down) return;
-        posX = posX
-        posY = posY + speed
-        updatePointerMoveData(pointer, posX, posY);
-
-    } else if (currentlyPressed.includes(12)) {
-    // DOWN
-
-        let speed = 10
-        let pointer = pointers[0];
-        if (!pointer.down) return;
-        posX = posX
-        posY = posY - speed
-        updatePointerMoveData(pointer, posX, posY);
-
-    } else if (currentlyPressed.includes(15)) {
-    // RIGHT
-        
-        let speed = 10
-        let pointer = pointers[0];
-        if (!pointer.down) return;
-        posX = posX + speed
-        posY = posY
-        updatePointerMoveData(pointer, posX, posY);
-
-    } else if (currentlyPressed.includes(14)) {
-    // LEFT
-
-        let speed = 10
-        let pointer = pointers[0];
-        if (!pointer.down) return;
-        posX = posX - speed
-        posY = posY
-        updatePointerMoveData(pointer, posX, posY);
-
-    } else if (currentlyPressed.includes(0)) {
-    // When X pressed
-
+    } else if (currentlyPressed.includes(0)) { // When X pressed
         splatStack.push(parseInt(Math.random() * 20) + 5);
-
     } else if (activeJoysticks) {
 
         let speed = 50
         let pointer = pointers[0];
         if (!pointer.down) return;
-        posX = posX + speed * activeJoysticks[0]
-        posY = posY + speed * activeJoysticks[1]
+
+        // Create endless arena
+        (posX > canvas.width) ? posX = 0 : posX = posX + speed * activeJoysticks[0];
+        (posX < 0) ? posX = canvas.width : posX = posX + speed * activeJoysticks[0];
+        (posY > canvas.height) ? posY = 0 : posY = posY + speed * activeJoysticks[1];
+        (posY < 0) ? posY = canvas.height : posY = posY + speed * activeJoysticks[1];
+
+        
         updatePointerMoveData(pointer, posX, posY);
 
+        // Change config whilest moving
         if (currentlyPressed.includes(7)) {
             pressedButtons.map(button => {
                 if (button.id === 7) {
@@ -1524,12 +1485,8 @@ function getGamepadeState() {
             config.BLOOM_INTENSITY = 0.4
         }
 
-
-    } else {
-    // When L2 released
-
+    } else { // When L2 released
         updatePointerUpData(pointers[0]);
-
     }
 
 }
