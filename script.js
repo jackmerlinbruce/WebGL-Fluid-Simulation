@@ -1131,6 +1131,7 @@ function update () {
         step(dt);
     render(null);
     requestAnimationFrame(update);
+    getGamepadeState();
 }
 
 function calcDeltaTime () {
@@ -1421,6 +1422,40 @@ function correctRadius (radius) {
     return radius;
 }
 
+function getGamepadeState() {
+
+    const gamepads = navigator.getGamepads()
+    const gamepad = gamepads[0]
+
+    if (!gamepad) {
+        console.log('No gamepad found.')
+        return
+    }
+
+    function isPressed({ button: { pressed } }) {
+        return !!pressed;
+    }
+
+    let pressedButtons = gamepad.buttons
+        .map((button, id) => ({ id, button }))
+        .filter(isPressed)
+
+    if (pressedButtons.length > 0) {
+        console.log(pressedButtons)
+        splatStack.push(parseInt(Math.random() * 20) + 5);
+        pressedButtons = []
+    }
+
+}
+
+window.addEventListener('keydown', e => {
+    let pauseKeys = ['KeyP', 'Tab']
+    if (pauseKeys.includes(e.code))
+        config.PAUSED = !config.PAUSED;
+    if (e.code === 'KeyQ')
+        splatStack.push(parseInt(Math.random() * 20) + 5);
+});
+
 canvas.addEventListener('mousedown', e => {
     let posX = scaleByPixelRatio(e.offsetX);
     let posY = scaleByPixelRatio(e.offsetY);
@@ -1474,14 +1509,6 @@ window.addEventListener('touchend', e => {
         if (pointer == null) continue;
         updatePointerUpData(pointer);
     }
-});
-
-window.addEventListener('keydown', e => {
-    let pauseKeys = ['KeyP', 'Tab']
-    if (pauseKeys.includes(e.code))
-        config.PAUSED = !config.PAUSED;
-    if (e.code === 'KeyQ')
-        splatStack.push(parseInt(Math.random() * 20) + 5);
 });
 
 function updatePointerDownData (pointer, id, posX, posY) {
