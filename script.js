@@ -31,20 +31,20 @@ let config = {
     SIM_RESOLUTION: 128,
     DYE_RESOLUTION: 1024,
     CAPTURE_RESOLUTION: 512,
-    DENSITY_DISSIPATION: 1,
-    VELOCITY_DISSIPATION: 0.2,
+    DENSITY_DISSIPATION: 3,
+    VELOCITY_DISSIPATION: 2,
     PRESSURE: 0.8,
     PRESSURE_ITERATIONS: 20,
     CURL: 30,
     SPLAT_RADIUS: 0.25,
     SPLAT_FORCE: 6000,
     SHADING: true,
-    COLORFUL: true,
+    COLORFUL: false,
     COLOR_UPDATE_SPEED: 10,
     PAUSED: false,
     BACK_COLOR: { r: 0, g: 0, b: 0 },
     TRANSPARENT: false,
-    BLOOM: true,
+    BLOOM: false,
     BLOOM_ITERATIONS: 8,
     BLOOM_RESOLUTION: 256,
     BLOOM_INTENSITY: 0.8,
@@ -249,6 +249,8 @@ function startGUI () {
 
     if (isMobile())
         gui.close();
+
+    gui.close();
 }
 
 function isMobile () {
@@ -1157,7 +1159,7 @@ function updateColors (dt) {
     if (colorUpdateTimer >= 1) {
         colorUpdateTimer = wrap(colorUpdateTimer, 0, 1);
         pointers.forEach(p => {
-            p.color = generateColor();
+            p.color = generateRandomColor();
         });
     }
 }
@@ -1382,7 +1384,7 @@ function splatPointer (pointer) {
 
 function multipleSplats (amount) {
     for (let i = 0; i < amount; i++) {
-        const color = generateColor();
+        const color = generateRandomColor();
         color.r *= 10.0;
         color.g *= 10.0;
         color.b *= 10.0;
@@ -1475,9 +1477,10 @@ window.addEventListener('touchend', e => {
 });
 
 window.addEventListener('keydown', e => {
-    if (e.code === 'KeyP')
+    let pauseKeys = ['KeyP', 'Tab']
+    if (pauseKeys.includes(e.code))
         config.PAUSED = !config.PAUSED;
-    if (e.key === ' ')
+    if (e.code === 'KeyQ')
         splatStack.push(parseInt(Math.random() * 20) + 5);
 });
 
@@ -1491,7 +1494,7 @@ function updatePointerDownData (pointer, id, posX, posY) {
     pointer.prevTexcoordY = pointer.texcoordY;
     pointer.deltaX = 0;
     pointer.deltaY = 0;
-    pointer.color = generateColor();
+    pointer.color = generateTwoColors(pointer);
 }
 
 function updatePointerMoveData (pointer, posX, posY) {
@@ -1520,7 +1523,25 @@ function correctDeltaY (delta) {
     return delta;
 }
 
-function generateColor () {
+function generateTwoColors(pointer) {
+    let pink = { r: 0.15, g: 0, b: 0.15 }
+    let blue = { r: 0, g: 0.15, b: 0.15 }
+
+    console.log(pointer.currentColor)
+
+    if (pointer.currentColor === 'pink') {
+        pointer.currentColor = 'blue'
+        return blue
+    } else if (pointer.currentColor === 'blue') {
+        pointer.currentColor = 'pink'
+        return pink
+    } else {
+        pointer.currentColor = 'pink'
+        return pink
+    }
+}
+
+function generateRandomColor () {
     let c = HSVtoRGB(Math.random(), 1.0, 1.0);
     c.r *= 0.15;
     c.g *= 0.15;
