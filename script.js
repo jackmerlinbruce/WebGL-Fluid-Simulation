@@ -1455,8 +1455,10 @@ function getGamepadeState() {
         if (pointer == null)
             pointer = new pointerPrototype();
         updatePointerDownData(pointer, -1, posX, posY);
+
     } else if (currentlyPressed.includes(0)) { // When X pressed
         splatStack.push(parseInt(Math.random() * 20) + 5);
+        
     } else if (activeJoysticks) {
 
         let pointer = pointers[0];
