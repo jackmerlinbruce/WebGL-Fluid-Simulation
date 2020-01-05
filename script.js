@@ -28,7 +28,7 @@ const canvas = document.getElementsByTagName('canvas')[0];
 resizeCanvas();
 
 let config = {
-    SIM_RESOLUTION: 128,
+    SIM_RESOLUTION: 256,
     DYE_RESOLUTION: 1024,
     CAPTURE_RESOLUTION: 512,
     DENSITY_DISSIPATION: 1,
@@ -1423,9 +1423,22 @@ function correctRadius (radius) {
 }
 
 var posX, posY, speed;
-posX = canvas.width / 2;
-posY = canvas.height / 2;
-speed = 50;
+posX = [
+    canvas.width / 2,
+    canvas.width / 2
+]
+posY = [
+    canvas.height / 2,
+    canvas.height / 2
+]
+speed = 3;
+
+// gamepad.vibrationActuator.playEffect('dual-rumble', {
+//     startDelay: 0,
+//     duration: 10,
+//     weakMagnitude: 0.2,
+//     strongMagnitude: 0.2
+// });
 
 function getGamepadeState() {
 
@@ -1442,38 +1455,50 @@ function getGamepadeState() {
     }
 
     let activeJoysticks = gamepad.axes
+    let joystick = [
+        [activeJoysticks[0], activeJoysticks[1]],
+        [activeJoysticks[2], activeJoysticks[3]]
+    ]
 
     let pressedButtons = gamepad.buttons
         .map((button, id) => ({ id, button }))
         .filter(isPressed)
 
     let currentlyPressed = pressedButtons.map(button => { return button.id })
-    // console.log(currentlyPressed)
 
     if (currentlyPressed.includes(6)) { // When L2 pressed
-        let pointer = pointers.find(p => p.id == -1);
-        if (pointer == null)
-            pointer = new pointerPrototype();
-        updatePointerDownData(pointer, -1, posX, posY);
 
-    } else if (currentlyPressed.includes(0)) { // When X pressed
+        const numPlayers = 2;
+        while (numPlayers >= pointers.length)
+            pointers.push(new pointerPrototype());
+        for (let i = 0; i < numPlayers; i++) {
+            updatePointerDownData(pointers[i + 1], Math.random(), posX[i], posY[i]);
+        }
+
+    } else if (currentlyPressed.includes(0)) { // When CROSS pressed
         splatStack.push(parseInt(Math.random() * 20) + 5);
-        
+
     } else if (activeJoysticks) {
 
-        let pointer = pointers[0];
-        if (!pointer.down) return;
-
-        // Create endless arena
-        (posX > canvas.width) ? posX = 0 : posX = posX + speed * activeJoysticks[0];
-        (posX < 0) ? posX = canvas.width : posX = posX + speed * activeJoysticks[0];
-        (posY > canvas.height) ? posY = 0 : posY = posY + speed * activeJoysticks[1];
-        (posY < 0) ? posY = canvas.height : posY = posY + speed * activeJoysticks[1];
-
-        updatePointerMoveData(pointer, posX, posY);
+        const numPlayers = 2;
+        for (let i = 0; i < numPlayers; i++) {
+            let pointer = pointers[i + 1];
+            if (!pointer.down) continue;
+            (posX[i] > canvas.width) ? posX[i] = 0 : posX[i] = posX[i] + speed * joystick[i][0];
+            (posX[i] < 0) ? posX[i] = canvas.width : posX[i] = posX[i] + speed * joystick[i][0];
+            (posY[i] > canvas.height) ? posY[i] = 0 : posY[i] = posY[i] + speed * joystick[i][1];
+            (posY[i] < 0) ? posY[i] = canvas.height : posY[i] = posY[i] + speed * joystick[i][1];
+            updatePointerMoveData(pointer, posX[i], posY[i]);
+        }
 
         // Change config whilest moving
-        if (currentlyPressed.includes(7)) {
+        if (currentlyPressed.includes(1)) {
+            pressedButtons.map(button => {
+                if (button.id === 1) {
+                    config.PAUSED = true;
+                }
+            })
+        } else if (currentlyPressed.includes(7)) {
             pressedButtons.map(button => {
                 if (button.id === 7) {
                     let size = button.button.value
@@ -1482,6 +1507,7 @@ function getGamepadeState() {
                 }
             })
         } else {
+            config.PAUSED = false
             config.SPLAT_RADIUS = 0.01
             config.BLOOM_INTENSITY = 0.4
         }
@@ -1489,7 +1515,6 @@ function getGamepadeState() {
     } else { // When L2 released
         updatePointerUpData(pointers[0]);
     }
-
 }
 
 window.addEventListener('keydown', e => {
