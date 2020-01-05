@@ -25,7 +25,9 @@ SOFTWARE.
 'use strict';
 
 const canvas = document.getElementsByTagName('canvas')[0];
-resizeCanvas();
+const canvas2D = document.getElementsByTagName('canvas')[1];
+resizeCanvas(canvas);
+resizeCanvas(canvas2D);
 
 let config = {
     SIM_RESOLUTION: 256,
@@ -72,7 +74,23 @@ let pointers = [];
 let splatStack = [];
 pointers.push(new pointerPrototype());
 
+var posX = [
+    canvas.width / 2,
+    canvas.width / 2
+]
+var posY = [
+    canvas.height / 2,
+    canvas.height / 2
+]
+var radius = [ 50, 50 ]
+var speed = 20
+
+var numFood = 1;
+var food = [];
+food.push(new foodPrototype());
+
 const { gl, ext } = getWebGLContext(canvas);
+const ctx2D = canvas2D.getContext('2d')
 
 if (isMobile()) {
     config.DYE_RESOLUTION = 512;
@@ -1123,7 +1141,9 @@ update();
 
 function update () {
     const dt = calcDeltaTime();
-    if (resizeCanvas())
+    if (resizeCanvas(canvas))
+        initFramebuffers();
+    if (resizeCanvas(canvas2D))
         initFramebuffers();
     updateColors(dt);
     applyInputs();
@@ -1132,6 +1152,7 @@ function update () {
     render(null);
     requestAnimationFrame(update);
     getGamepadeState();
+    draw2D();
 }
 
 function calcDeltaTime () {
@@ -1142,7 +1163,7 @@ function calcDeltaTime () {
     return dt;
 }
 
-function resizeCanvas () {
+function resizeCanvas (canvas) {
     let width = scaleByPixelRatio(canvas.clientWidth);
     let height = scaleByPixelRatio(canvas.clientHeight);
     if (canvas.width != width || canvas.height != height) {
@@ -1422,23 +1443,59 @@ function correctRadius (radius) {
     return radius;
 }
 
-var posX, posY, speed;
-posX = [
-    canvas.width / 2,
-    canvas.width / 2
-]
-posY = [
-    canvas.height / 2,
-    canvas.height / 2
-]
-speed = 3;
+function draw2D () {
+    clearCircle()
+    drawCirlce(posX[0], posY[0], radius[0]);
+    checkFoodCollision()
+}
 
-// gamepad.vibrationActuator.playEffect('dual-rumble', {
-//     startDelay: 0,
-//     duration: 10,
-//     weakMagnitude: 0.2,
-//     strongMagnitude: 0.2
-// });
+function drawCirlce (x, y, r) {
+    ctx2D.beginPath();
+    ctx2D.arc(x, y, r, 0, Math.PI * 2);
+    ctx2D.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx2D.stroke();
+    ctx2D.closePath();
+}
+
+function foodPrototype () {
+    this.x = Math.round(canvas.width * Math.random())
+    this.y = Math.round(canvas.height * Math.random())
+}
+
+function drawFood (food) {
+    ctx2D.beginPath()
+    ctx2D.arc(food.x, food.y, 100, 0, Math.PI * 2);
+    ctx2D.fillStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx2D.fill()
+    ctx2D.closePath();
+}
+
+function checkFoodCollision () {
+    // check collision
+    if (posX[0] < food[0].x) {
+        food.pop();
+        food.push(new foodPrototype());
+        drawFood(food[0]);
+        rumble(50);
+    } else {
+        drawFood(food[0])
+    }
+}
+
+function clearCircle () {
+    ctx2D.clearRect(0, 0, canvas2D.width, canvas2D.height);
+}
+
+function rumble(ms) {
+    const gamepads = navigator.getGamepads()
+    const gamepad = gamepads[0]
+    gamepad.vibrationActuator.playEffect('dual-rumble', {
+        startDelay: 0,
+        duration: ms,
+        weakMagnitude: 1,
+        strongMagnitude: 1
+    });
+}
 
 function getGamepadeState() {
 
@@ -1504,12 +1561,14 @@ function getGamepadeState() {
                     let size = button.button.value
                     config.SPLAT_RADIUS = 0.01 + (size * 0.1)
                     config.BLOOM_INTENSITY = 0.4 - (size * 0.35)
+                    radius[0] = 180 * size;
                 }
             })
         } else {
             config.PAUSED = false
             config.SPLAT_RADIUS = 0.01
             config.BLOOM_INTENSITY = 0.4
+            radius[0] = 50
         }
 
     } else { // When L2 released

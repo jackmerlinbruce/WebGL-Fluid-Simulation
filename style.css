@@ -20,6 +20,20 @@ canvas {
     height: 100%;
 }
 
+canvas#canvas3D {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    z-index: 1;
+}
+
+canvas#canvas2D {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    z-index: 2;
+}
+
 .dg {
     opacity: 0.9;
 }
